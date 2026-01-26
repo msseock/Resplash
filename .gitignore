@@ -1,3 +1,6 @@
 *.xcuserstate
 **/APIkey.swift
 **/Constants.swift
+
+## User settings
+**/xcuserdata/
