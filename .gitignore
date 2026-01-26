@@ -1,0 +1,3 @@
+*.xcuserstate
+**/APIkey.swift
+**/Constants.swift
