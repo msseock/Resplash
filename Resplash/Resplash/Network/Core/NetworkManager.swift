@@ -40,6 +40,15 @@ class NetworkManager {
                 return
             }
             
+            // rate limit 확인
+            print("X-Ratelimit-Remaining: \(urlResponse.value(forHTTPHeaderField: "X-Ratelimit-Remaining") ?? "없음")")
+            
+            if let rateLimitText = urlResponse.value(forHTTPHeaderField: "X-Ratelimit-Remaining"),
+            let rateLimit = Int(rateLimitText),
+            rateLimit == 0 {
+                print("호출횟수 제한으로 다음 호출에는 키 교체 예정")
+                self.changeToNextKey()
+            }
             
             // statusCode 확인 & data 검증
             let statusCode = UnsplashStatusCode(rawValue: urlResponse.statusCode) ?? .undefinedError
@@ -67,6 +76,17 @@ class NetworkManager {
             }
         }
 
+    }
+    
+    private func changeToNextKey() {
+        switch self.currentKey {
+        case .access:
+            self.currentKey = .spare1
+        case .spare1:
+            self.currentKey = .spare2
+        case .spare2:
+            self.currentKey = .access
+        }
     }
 }
 
