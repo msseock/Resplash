@@ -56,15 +56,14 @@ extension SearchImageCollectionViewCell {
     // subview configure
     private func configureImageView() {
         imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
     }
         
-    func configureData(with data: UnsplashMetaData) {
-//        imageView.kfImage(url:)
-    }
-    
-    // TODO: 위의 데이터로 바꾸기
-    func configureData(with url: String) {
-        imageView.kfImage(url: url)
+    func configureData(with data: UnsplashMetaData?) {
+        if let data {
+            imageView.kfImage(url: data.urls.small)
+            likeTokenView.configureData(count: data.likes)
+        }
     }
     
     

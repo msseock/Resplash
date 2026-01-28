@@ -21,7 +21,7 @@ class NetworkManager {
         ]
     }
     
-    func request(endpoint: UnsplashEndpoint, completionHandler: @escaping () -> Void) {
+    func request(endpoint: UnsplashEndpoint, completionHandler: @escaping (Decodable) -> Void) {
         
         let url = APIConstants.baseURL + endpoint.path
         
@@ -64,7 +64,7 @@ class NetworkManager {
                     let decodedData = try JSONDecoder().decode(endpoint.reponseType.self, from: data)
                     dump(decodedData)
                     
-                    completionHandler()
+                    completionHandler(decodedData)
                     
                 } else {
                     let decodedData = try JSONDecoder().decode(UnsplashError.self, from: data)
