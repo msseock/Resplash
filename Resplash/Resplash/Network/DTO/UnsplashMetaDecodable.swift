@@ -10,7 +10,7 @@ import Foundation
 struct UnsplashMetaDecodable: Decodable {
     let total: Int
     let total_pages: Int
-    let results: [UnsplashMetaData]
+    var results: [UnsplashMetaData]
 }
 
 struct UnsplashMetaData: Decodable {

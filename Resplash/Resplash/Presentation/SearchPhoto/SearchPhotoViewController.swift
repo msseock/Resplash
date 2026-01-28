@@ -43,9 +43,9 @@ class SearchPhotoViewController: BaseViewController {
     
     // logic / datas
     var imageData: UnsplashMetaDecodable? = nil
-//    var imageData: [String] = []
     var orderType: UnsplashOrderType = .relevant
     var page = 1
+    var latestquery: String? = nil
     
     // MARK: - View Lifecycle
     override func viewDidLoad() {
@@ -184,6 +184,19 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
         return cell
     }
     
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if let imageData,
+           !(imageData.total_pages <= page),
+            indexPath.item == (imageData.results.count - 2) {
+            
+            // 기존 검색어로 추가검색
+            if let latestquery {
+                self.page += 1
+                fetchSearchData(query: latestquery)
+            }
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let vc = PhotoDetailViewController()
         navigationController?.pushViewController(vc, animated: true)
@@ -197,6 +210,7 @@ extension SearchPhotoViewController: UISearchBarDelegate {
         print(#function)
         view.endEditing(true)
         if let text = searchBar.text, !text.isEmpty {
+            latestquery = text
             fetchSearchData(query: text)
         }
     }
@@ -214,7 +228,13 @@ extension SearchPhotoViewController {
             )
         ) { data in
             guard let data = data as? UnsplashMetaDecodable else { return }
-            self.imageData = data
+            
+            if let imgData = self.imageData, !imgData.results.isEmpty {
+                self.imageData?.results.append(contentsOf: data.results)
+            } else {
+                self.imageData = data
+            }
+            
             self.configureResultView()
             self.SearchImageCollectionView.reloadData()
         }
@@ -227,6 +247,10 @@ extension SearchPhotoViewController {
         case .relevant:
             self.orderType = .latest
         }
+        
+        // 정렬 방식 바뀔 때는 갱신되도록
+        imageData = nil
+        page = 1
         
         if let text = searchBar.text, !text.isEmpty {
             fetchSearchData(query: text)
