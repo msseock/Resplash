@@ -42,16 +42,14 @@ class SearchPhotoViewController: BaseViewController {
     
     
     // logic / datas
-//    var imageData: UnsplashMetaDecodable?
-    var imageData: [String] = []
+    var imageData: UnsplashMetaDecodable? = nil
+//    var imageData: [String] = []
     var orderType: UnsplashOrderType = .relevant
+    var page = 1
     
     // MARK: - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // TODO: 네트워킹으로 임시로 채운거 정식으로 데이터 입력해넣기
-        imageData = [
-        ]
     }
 
     // MARK: - Configure View
@@ -139,14 +137,17 @@ extension SearchPhotoViewController {
     }
     
     private func configureResultView() {
-        if imageData.isEmpty {
+        if imageData == nil {
             statusLabel.isHidden = false
-            // TODO: 네트워킹 결과에 따라 안내문구 다르게 띄우기
             statusLabel.text = "사진을 검색해보세요"
             
+        } else if let imageData, imageData.total == 0 {
+            statusLabel.isHidden = false
+            statusLabel.text = "검색 결과가 없어요"
         } else {
             statusLabel.isHidden = true
         }
+        
         configureResultLabel()
         configureCollectionView()
     }
@@ -171,14 +172,14 @@ extension SearchPhotoViewController {
 // MARK: CollectionView
 extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        imageData.count
-//        imageData?.results.count ?? 0
+        imageData?.results.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchImageCollectionViewCell.identifier, for: indexPath) as! SearchImageCollectionViewCell
         
-        cell.configureData(with: imageData[indexPath.item])
+        let cellData = imageData?.results[indexPath.item]
+        cell.configureData(with: cellData)
         
         return cell
     }
@@ -195,12 +196,30 @@ extension SearchPhotoViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         print(#function)
         view.endEditing(true)
+        if let text = searchBar.text, !text.isEmpty {
+            fetchSearchData(query: text)
+        }
     }
 }
 
 
 // MARK: - Logic
 extension SearchPhotoViewController {
+    private func fetchSearchData(query: String) {
+        NetworkManager.shared.request(
+            endpoint: .search(
+                query: query,
+                page: self.page,
+                order: self.orderType
+            )
+        ) { data in
+            guard let data = data as? UnsplashMetaDecodable else { return }
+            self.imageData = data
+            self.configureResultView()
+            self.SearchImageCollectionView.reloadData()
+        }
+    }
+    
     @objc func orderButtonTapped() {
         switch self.orderType {
         case .latest:
@@ -208,7 +227,10 @@ extension SearchPhotoViewController {
         case .relevant:
             self.orderType = .latest
         }
-        // TODO: 바뀐 정렬로 검색 요청하기
+        
+        if let text = searchBar.text, !text.isEmpty {
+            fetchSearchData(query: text)
+        }
         
         configureOrderButton()
     }
