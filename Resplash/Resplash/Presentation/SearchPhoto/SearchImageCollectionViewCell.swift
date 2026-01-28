@@ -51,6 +51,7 @@ extension SearchImageCollectionViewCell {
     
     func configureView() {
         configureImageView()
+        backgroundColor = .systemGray6
     }
     
     // subview configure
