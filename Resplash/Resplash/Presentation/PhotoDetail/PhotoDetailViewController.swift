@@ -7,12 +7,25 @@
 
 import UIKit
 
-class PhotoDetailViewController: UIViewController {
+import SnapKit
+
+class PhotoDetailViewController: BaseViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(self, #function)
+        
     }
 
+    override func configureHierarchy() {
+        
+    }
+
+    override func configureLayout() {
+        
+    }
+
+    override func configureView() {
+        super.configureView()
+    }
 
 }

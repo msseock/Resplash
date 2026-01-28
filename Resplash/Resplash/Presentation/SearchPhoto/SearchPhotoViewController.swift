@@ -7,12 +7,25 @@
 
 import UIKit
 
-class SearchPhotoViewController: UIViewController {
+import SnapKit
 
+class SearchPhotoViewController: BaseViewController {
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(self, #function)
+        
     }
 
+    override func configureHierarchy() {
+        
+    }
+
+    override func configureLayout() {
+
+    }
+
+    override func configureView() {
+        super.configureView()        
+    }
 
 }

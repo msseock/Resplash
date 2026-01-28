@@ -7,11 +7,25 @@
 
 import UIKit
 
-class TopicPhotoViewController: UIViewController {
+import SnapKit
 
+class TopicPhotoViewController: BaseViewController {
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(self, #function)
+        
+    }
+
+    override func configureHierarchy() {
+        
+    }
+
+    override func configureLayout() {
+        
+    }
+
+    override func configureView() {
+        super.configureView()
     }
 
 }
