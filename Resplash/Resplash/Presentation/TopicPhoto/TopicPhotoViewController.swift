@@ -86,7 +86,11 @@ extension TopicPhotoViewController: UICollectionViewDelegate, UICollectionViewDa
         
         cell.configureData(
             topic: topics[indexPath.item],
-            data: topicData?[indexPath.item]
+            data: topicData?[indexPath.item],
+            navigatingAction: { data in
+                let vc = PhotoDetailViewController()
+                self.navigationController?.pushViewController(vc, animated: true)
+            }
         )
         
         return cell

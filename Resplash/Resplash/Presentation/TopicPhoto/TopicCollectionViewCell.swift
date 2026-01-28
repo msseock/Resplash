@@ -39,6 +39,7 @@ class TopicCollectionViewCell: UICollectionViewCell {
     // data
     var sectionTopic: UnsplashTopic?
     var topicSectionData: [UnsplashMetaData]?
+    var pushToDetailView: ((UnsplashMetaData?) -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -97,9 +98,10 @@ extension TopicCollectionViewCell {
         
     }
         
-    func configureData(topic: UnsplashTopic, data: [UnsplashMetaData]?) {
+    func configureData(topic: UnsplashTopic, data: [UnsplashMetaData]?, navigatingAction: ((UnsplashMetaData?) -> Void)?) {
         self.sectionTopic = topic
         self.topicSectionData = data
+        self.pushToDetailView = navigatingAction
         titleLabel.text = topic.koreanName
         imageCollectionView.reloadData()
     }
@@ -107,7 +109,7 @@ extension TopicCollectionViewCell {
     
 }
 
-
+// MARK: CollectionView
 extension TopicCollectionViewCell: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         10
@@ -123,5 +125,7 @@ extension TopicCollectionViewCell: UICollectionViewDelegate, UICollectionViewDat
         return cell
     }
     
-    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        pushToDetailView?(topicSectionData?[indexPath.item])
+    }
 }
