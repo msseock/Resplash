@@ -40,7 +40,7 @@ class TopicPhotoViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        fetchSearchData()
     }
 
     override func configureHierarchy() {
@@ -102,6 +102,19 @@ extension TopicPhotoViewController: UICollectionViewDelegate, UICollectionViewDa
 
 // MARK: Logic
 extension TopicPhotoViewController {
-    // TODO: 네트워크 요청
+    private func fetchSearchData() {
+        self.topicData = Array(repeating: [], count: topics.count)
+
+        for (index, topic) in topics.enumerated() {
+            NetworkManager.shared.request(
+                endpoint: .topic(id: topic)
+            ) { data in
+                guard let data = data as? [UnsplashMetaData] else { return }
+                self.topicData?[index] = data
+                self.topicCollectionView.reloadData()
+            }
+        }
+    }
+
     
 }
