@@ -85,9 +85,7 @@ extension TopicCollectionViewCell {
     private func configureLabel() {
         titleLabel.text = sectionTopic?.koreanName
         titleLabel.font = .boldSystemFont(ofSize: 20)
-        titleLabel.textColor = .black
-        
-        print("sectionTopic:", sectionTopic)
+        titleLabel.textColor = .black        
     }
     
     private func configureCollectionView() {
@@ -112,7 +110,7 @@ extension TopicCollectionViewCell {
 // MARK: CollectionView
 extension TopicCollectionViewCell: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        10
+        topicSectionData?.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
