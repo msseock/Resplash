@@ -88,7 +88,24 @@ extension TopicPhotoViewController: UICollectionViewDelegate, UICollectionViewDa
             topic: topics[indexPath.item],
             data: topicData?[indexPath.item],
             navigatingAction: { data in
+                guard let currentData = data else {
+                    print("이미지 데이터 없음")
+                    return
+                }
+                let currentUser = currentData.user
+                
                 let vc = PhotoDetailViewController()
+                vc.configurePhotoDetailView(.init(
+                    id: currentData.id,
+                    profileImage: currentData.user.profile_image.medium,
+                    profileName: currentUser.name,
+                    createdDate: currentData.created_at,
+                    like: false,    // TODO: UserDefaults에서 불러오기
+                    mainImage: currentData.urls.small,
+                    imageWidth: currentData.width,
+                    imageHeight: currentData.height
+                ))
+
                 self.navigationController?.pushViewController(vc, animated: true)
             }
         )

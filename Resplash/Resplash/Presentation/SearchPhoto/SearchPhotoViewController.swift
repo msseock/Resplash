@@ -198,7 +198,23 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let currentData = imageData?.results[indexPath.item] else {
+            print("이미지 데이터 없음")
+            return
+        }
+        let currentUser = currentData.user
+        
         let vc = PhotoDetailViewController()
+        vc.configurePhotoDetailView(.init(
+            id: currentData.id,
+            profileImage: currentData.user.profile_image.medium,
+            profileName: currentUser.name,
+            createdDate: currentData.created_at,
+            like: false, // TODO: UserDefaults에서 불러오기
+            mainImage: currentData.urls.raw,
+            imageWidth: currentData.width,
+            imageHeight: currentData.height
+        ))
         navigationController?.pushViewController(vc, animated: true)
     }
     
