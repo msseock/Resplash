@@ -328,8 +328,8 @@ extension SearchPhotoViewController {
         
         removeResultData()
         
-        if let text = searchBar.text, !text.isEmpty {
-            fetchSearchData(query: text)
+        if let latestquery {
+            fetchSearchData(query: latestquery)
         }
 
         refreshColorChipStack()
