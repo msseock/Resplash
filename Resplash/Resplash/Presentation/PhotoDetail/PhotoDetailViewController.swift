@@ -45,20 +45,14 @@ class PhotoDetailViewController: BaseViewController {
     let chartView = UIView() // TODO: Chart로 바꾸기(지금은 레이아웃만 잡아두고)
     
     // MARK: data
-    private var profileImage: String = ""
-    private var profileName: String = ""
-    private var profileDate: String = ""
-    private var like: Bool = false
+    private var data: PhotoDetailData?
     
-    private var imageSize: CGSize = .init(width: 100, height: 100)
-    private var viewCountText: String = ""
-    private var downloadCountText: String = ""
     
     // MARK: computed
     private var profileDateText: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        guard let date = formatter.date(from: self.profileDate) else {
+        guard let data, let date = formatter.date(from: data.createdDate) else {
             print("날짜 없음")
             return "날짜 없음"
         }
@@ -69,25 +63,53 @@ class PhotoDetailViewController: BaseViewController {
     }
     
     private var heartButtonImage: UIImage {
-        let heartButtonImageName: String = self.like ? "heart.fill" : "heart"
-        return UIImage(systemName: heartButtonImageName)!
-    }
-    
-    private var imageSizeText: String {
-        return "\(self.imageSize.width) x \(self.imageSize.height)"
+        if let data {
+            let heartButtonImageName: String = data.like ? "heart.fill" : "heart"
+            return UIImage(systemName: heartButtonImageName)!
+        } else {
+            return UIImage(systemName: "heart")!
+        }
     }
     
     private var mainImageHeight: CGFloat {
+        guard let data else { return 0 }
+        
         let deviceWidth = UIScreen.main.bounds.width
-        let imageViewHeight = deviceWidth * (imageSize.height / imageSize.width)
+        let imageViewHeight = deviceWidth * (CGFloat(data.imageHeight) / CGFloat(data.imageWidth))
+        
         return imageViewHeight
+    }
+    
+    private var imageSizeText: String {
+        if let data {
+            return "\(data.imageWidth) x \(data.imageHeight)"
+        } else {
+            return "이미지 없음"
+        }
+    }
+    
+    private var viewCountText: String {
+        if let viewCount = data?.viewCount {
+            NumberFormatManager.shared.getFormattedNumberText(num: viewCount)
+        } else {
+            "조회 불가"
+        }
+    }
+    
+    private var downloadCountText: String {
+        if let downloadCount = data?.downloadCount {
+            NumberFormatManager.shared.getFormattedNumberText(num: downloadCount)
+        } else {
+            "조회 불가"
+        }
     }
 
     // MARK: - Configure Views
     override func viewDidLoad() {
         super.viewDidLoad()
-        // TODO: 데이터 넘겨주기 & API 호출로 데이터 채워넣기
         
+        fetchSearchData()
+        refreshView()
     }
 
     override func configureHierarchy() {
@@ -293,23 +315,23 @@ extension PhotoDetailViewController {
         heartButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
     }
     
-    func configureProfileBarData(
-        profileImage: String,
-        profileName: String,
-        profileDate: String,
-        like: Bool
-    ) {
-        self.profileImage = profileImage
-        self.profileName = profileName
-        self.profileDate = profileDate
-        self.like = like
-        
-        refreshProfileBar()
-    }
+//    func configureProfileBarData(
+//        profileImage: String,
+//        profileName: String,
+//        createdDate: String,
+//        like: Bool
+//    ) {
+//        self.data.profileImage = profileImage
+//        self.data.profileName = profileName
+//        self.data.createdDate = profileDate
+//        self.data.like = like
+//        
+//        refreshProfileBar()
+//    }
     
     private func refreshProfileBar() {
-        profileImageView.kfImage(url: self.profileImage)
-        nameLabel.text = self.profileName
+        profileImageView.kfImage(url: self.data?.profileImage ?? "")
+        nameLabel.text = self.data?.profileName
         dateLabel.text = self.profileDateText
         refreshHeartButton()
     }
@@ -323,8 +345,10 @@ extension PhotoDetailViewController {
         mainImageView.contentMode = .scaleAspectFit
     }
     
-    func configureMainImage(imgURL: String) {
-        mainImageView.kfImage(url: imgURL)
+    func refreshMainImage() {
+        if let data {
+            mainImageView.kfImage(url: data.mainImage)
+        }
     }
     
     // info section
@@ -359,23 +383,9 @@ extension PhotoDetailViewController {
     }
     
     private func refreshInfoSection() {
-        
         infoRowLabels[0][1].text = self.imageSizeText
         infoRowLabels[1][1].text = self.viewCountText
         infoRowLabels[2][1].text = self.downloadCountText
-    }
-    
-    func configureInfoSectionData(
-        imgWidth: Int,
-        imgHeight: Int,
-        totalView: Int,
-        downloadTotal: Int
-    ) {
-        self.imageSize = .init(width: imgWidth, height: imgHeight)
-        self.viewCountText = NumberFormatManager.shared.getFormattedNumberText(num: totalView)
-        self.downloadCountText = NumberFormatManager.shared.getFormattedNumberText(num: downloadTotal)
-        
-        refreshInfoSection()
     }
     
     // chart section
@@ -399,7 +409,43 @@ extension PhotoDetailViewController {
 // MARK: - Logics
 extension PhotoDetailViewController {
     @objc private func likeButtonTapped() {
-        self.like.toggle()
-        refreshHeartButton()
+        if data != nil {
+            self.data!.like.toggle()
+            refreshHeartButton()
+        } else {
+            print(#function)
+        }
+    }
+    
+    func configurePhotoDetailView(_ data: PhotoDetailData) {
+        self.data = data
+    }
+    
+    private func refreshView() {
+        refreshProfileBar()
+        refreshMainImage()
+        refreshInfoSection()
+    }
+    
+    private func fetchSearchData() {
+        guard let id = self.data?.id else {
+            print("데이터 없음")
+            return
+        }
+        
+        NetworkManager.shared.request(
+            endpoint: .detail(id: id)
+        ) { data in
+            guard let data = data as? UnsplashDetailDecodable else {
+                print("UnsplashDetailDecodable casting fail")
+                return
+            }
+            
+            self.data?.viewCount = data.views.total
+            self.data?.downloadCount = data.downloads.total
+            
+            self.refreshInfoSection()
+        }
+        
     }
 }

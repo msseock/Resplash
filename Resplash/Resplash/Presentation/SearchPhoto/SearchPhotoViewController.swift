@@ -198,7 +198,23 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let currentData = imageData?.results[indexPath.item] else {
+            print("이미지 데이터 없음")
+            return
+        }
+        let currentUser = currentData.user
+        
         let vc = PhotoDetailViewController()
+        vc.configurePhotoDetailView(.init(
+            id: currentData.id,
+            profileImage: currentData.user.profile_image.medium,
+            profileName: currentUser.name,
+            createdDate: currentData.created_at,
+            like: false, // TODO: UserDefaults에서 불러오기
+            mainImage: currentData.urls.raw,
+            imageWidth: currentData.width,
+            imageHeight: currentData.height
+        ))
         navigationController?.pushViewController(vc, animated: true)
     }
     
@@ -207,11 +223,13 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
 // MARK: SearchBar
 extension SearchPhotoViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        print(#function)
         view.endEditing(true)
         if let text = searchBar.text, !text.isEmpty {
-            latestquery = text
-            fetchSearchData(query: text)
+            if text != latestquery {
+                latestquery = text
+                removeResultData()
+                fetchSearchData(query: text)
+            }
         }
     }
 }
@@ -249,13 +267,18 @@ extension SearchPhotoViewController {
         }
         
         // 정렬 방식 바뀔 때는 갱신되도록
-        imageData = nil
-        page = 1
+        removeResultData()
         
         if let text = searchBar.text, !text.isEmpty {
             fetchSearchData(query: text)
         }
         
         configureOrderButton()
+    }
+    
+    private func removeResultData() {
+        imageData = nil
+        page = 1
+
     }
 }
