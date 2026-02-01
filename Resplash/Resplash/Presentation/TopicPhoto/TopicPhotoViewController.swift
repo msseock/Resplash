@@ -36,7 +36,14 @@ class TopicPhotoViewController: BaseViewController {
     
     // data
     var topicData: [[UnsplashMetaData]]?
-    private let topics: [UnsplashTopic] = [.goldenHour, .businessWork, .architectureInterior]
+    private let topics: [UnsplashTopic] = {
+        var array: [UnsplashTopic] = []
+        for _ in 0..<3 {
+            let randomTopic = UnsplashTopic(rawValue: Int.random(in: 0..<UnsplashTopic.allCases.count))!
+            array.append(randomTopic)
+        }
+        return array
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
