@@ -15,27 +15,21 @@ class PhotoDetailViewController: BaseViewController {
     let scrollView = UIScrollView()
     let contentView = UIView()
     
+    // profile bar
     let profileBarView = UIView()
     let profileImageView = UIImageView()
     let nameLabel = UILabel()
     let dateLabel = UILabel()
     let heartButton = UIButton()
     
+    // image
     let mainImageView = UIImageView()
     
+    // info section
     let infoSectionView = UIView()
     let infoTitleLabel = UILabel()
-    let infoRowStack = UIStackView()
-    // TODO: 삭제하고 configure로 옮기기
-    let infoRowStackTemp: UIStackView = {
-        let view = UIStackView()
-        view.axis = .vertical
-        view.alignment = .leading
-        view.spacing = 8
-        view.distribution = .equalSpacing
-        return view
-    }()
     
+    let infoRowStack = UIStackView()
     let infoRowViews = [UIView(), UIView(), UIView()]
     let infoRowLabels = [
         [UILabel(), UILabel()],
@@ -43,6 +37,7 @@ class PhotoDetailViewController: BaseViewController {
         [UILabel(), UILabel()]
     ]
     
+    // chart section
     let chartSectionView = UIView()
     let chartTitleLabel = UILabel()
     let chartInfoView = UIView()
@@ -50,11 +45,39 @@ class PhotoDetailViewController: BaseViewController {
     let chartView = UIView() // TODO: Chart로 바꾸기(지금은 레이아웃만 잡아두고)
     
     // MARK: data
-    // TODO: width:height 데이터 가져와서 계산하기
-    var imageSize: CGSize = .init(width: 3098, height: 3872)
+    private var profileImage: String = ""
+    private var profileName: String = ""
+    private var profileDate: String = ""
+    private var like: Bool = false
     
-    // computed properties
-    var mainImageHeight: CGFloat {
+    private var imageSize: CGSize = .init(width: 100, height: 100)
+    private var viewCountText: String = ""
+    private var downloadCountText: String = ""
+    
+    // MARK: computed
+    private var profileDateText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        guard let date = formatter.date(from: self.profileDate) else {
+            print("날짜 없음")
+            return "날짜 없음"
+        }
+        
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "yyyy년 M월 d일 게시됨"
+        return displayFormatter.string(from: date)
+    }
+    
+    private var heartButtonImage: UIImage {
+        let heartButtonImageName: String = self.like ? "heart.fill" : "heart"
+        return UIImage(systemName: heartButtonImageName)!
+    }
+    
+    private var imageSizeText: String {
+        return "\(self.imageSize.width) x \(self.imageSize.height)"
+    }
+    
+    private var mainImageHeight: CGFloat {
         let deviceWidth = UIScreen.main.bounds.width
         let imageViewHeight = deviceWidth * (imageSize.height / imageSize.width)
         return imageViewHeight
@@ -63,6 +86,7 @@ class PhotoDetailViewController: BaseViewController {
     // MARK: - Configure Views
     override func viewDidLoad() {
         super.viewDidLoad()
+        // TODO: 데이터 넘겨주기 & API 호출로 데이터 채워넣기
         
     }
 
@@ -98,6 +122,11 @@ class PhotoDetailViewController: BaseViewController {
 
     override func configureView() {
         super.configureView()
+        
+        configureProfileBar()
+        configureMainImage()
+        configureInfoSection()
+        configureChartSection()
     }
 
 }
@@ -155,14 +184,12 @@ extension PhotoDetailViewController {
         infoSectionView.snp.makeConstraints { make in
             make.top.equalTo(mainImageView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(200)
         }
         configureInfoSectionViewLayout()
         
         chartSectionView.snp.makeConstraints { make in
             make.top.equalTo(infoSectionView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(300)
             make.bottom.equalToSuperview()
         }
         configureChartSectionViewLayout()
@@ -200,26 +227,29 @@ extension PhotoDetailViewController {
         }
         
         infoRowStack.snp.makeConstraints { make in
-            make.trailing.top.equalToSuperview()
-            make.width.equalToSuperview().multipliedBy(4.0/5.0)
+            make.trailing.top.bottom.equalToSuperview()
+            make.leading.equalTo(infoTitleLabel.snp.trailing)
         }
         
         
-         for index in 0..<infoRowViews.count {
-             
-             let leftLabel = infoRowLabels[index][0]
-             leftLabel.snp.makeConstraints { make in
-                 make.leading.equalToSuperview()
-                 make.verticalEdges.equalToSuperview()
-             }
-             
-             let rightLabel = infoRowLabels[index][1]
-             rightLabel.snp.makeConstraints { make in
-                 make.trailing.equalToSuperview()
-                 make.verticalEdges.equalToSuperview()
-             }
-         }
-         
+        for index in 0..<infoRowViews.count {
+            infoRowViews[index].snp.makeConstraints { make in
+                make.height.equalTo(30)
+            }
+            
+            let leftLabel = infoRowLabels[index][0]
+            leftLabel.snp.makeConstraints { make in
+                make.leading.equalToSuperview()
+                make.verticalEdges.equalToSuperview()
+            }
+            
+            let rightLabel = infoRowLabels[index][1]
+            rightLabel.snp.makeConstraints { make in
+                make.trailing.equalToSuperview()
+                make.verticalEdges.equalToSuperview()
+            }
+        }
+        
     }
     
     private func configureChartSectionViewLayout() {
@@ -229,7 +259,7 @@ extension PhotoDetailViewController {
         }
         
         chartInfoView.snp.makeConstraints { make in
-            make.trailing.top.equalToSuperview()
+            make.trailing.verticalEdges.equalToSuperview()
             make.width.equalToSuperview().multipliedBy(4.0/5.0)
         }
         
@@ -239,8 +269,137 @@ extension PhotoDetailViewController {
         
         chartView.snp.makeConstraints { make in
             make.top.equalTo(chartSegmentedControl.snp.bottom)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.bottom.equalToSuperview()
             make.height.equalTo(100)
         }
+    }
+    
+    // MARK: View
+    
+    // profile bar
+    private func configureProfileBar(){
+        profileImageView.contentMode = .scaleAspectFill
+        profileImageView.layer.cornerRadius = 24
+        profileImageView.clipsToBounds = true
+        profileImageView.backgroundColor = .lightGray
+        
+        nameLabel.textAlignment = .left
+        nameLabel.numberOfLines = 1
+        
+        dateLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        
+        heartButton.setTitle(nil, for: .normal)
+        refreshHeartButton()
+        heartButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
+    }
+    
+    func configureProfileBarData(
+        profileImage: String,
+        profileName: String,
+        profileDate: String,
+        like: Bool
+    ) {
+        self.profileImage = profileImage
+        self.profileName = profileName
+        self.profileDate = profileDate
+        self.like = like
+        
+        refreshProfileBar()
+    }
+    
+    private func refreshProfileBar() {
+        profileImageView.kfImage(url: self.profileImage)
+        nameLabel.text = self.profileName
+        dateLabel.text = self.profileDateText
+        refreshHeartButton()
+    }
+    
+    private func refreshHeartButton() {
+        heartButton.setImage(self.heartButtonImage, for: .normal)
+    }
+    
+    // main img
+    private func configureMainImage() {
+        mainImageView.contentMode = .scaleAspectFit
+    }
+    
+    func configureMainImage(imgURL: String) {
+        mainImageView.kfImage(url: imgURL)
+    }
+    
+    // info section
+    private func configureInfoSection(){
+        infoTitleLabel.text = "정보"
+        infoTitleLabel.font = .systemFont(ofSize: 17, weight: .bold)
+        
+        configureInfoRowStack()
+        configureInfoRowLabels()
+    }
+    
+    private func configureInfoRowStack() {
+        infoRowStack.axis = .vertical
+        infoRowStack.alignment = .fill
+        infoRowStack.spacing = 8
+        infoRowStack.distribution = .equalSpacing
+    }
+    
+    private func configureInfoRowLabels() {
+        let infoSubtitles: [String] = [
+            "크기", "조회수", "다운로드"
+        ]
+        
+        for index in 0..<infoRowLabels.count {
+            let left = infoRowLabels[index][0]
+            left.text = infoSubtitles[index]
+            left.font = .systemFont(ofSize: 15, weight: .semibold)
+            
+            let right = infoRowLabels[index][1]
+            right.font = .systemFont(ofSize: 15, weight: .regular)
+        }
+    }
+    
+    private func refreshInfoSection() {
+        
+        infoRowLabels[0][1].text = self.imageSizeText
+        infoRowLabels[1][1].text = self.viewCountText
+        infoRowLabels[2][1].text = self.downloadCountText
+    }
+    
+    func configureInfoSectionData(
+        imgWidth: Int,
+        imgHeight: Int,
+        totalView: Int,
+        downloadTotal: Int
+    ) {
+        self.imageSize = .init(width: imgWidth, height: imgHeight)
+        self.viewCountText = NumberFormatManager.shared.getFormattedNumberText(num: totalView)
+        self.downloadCountText = NumberFormatManager.shared.getFormattedNumberText(num: downloadTotal)
+        
+        refreshInfoSection()
+    }
+    
+    // chart section
+    private func configureChartSection() {
+        // TODO: chart 만들고 hidden 해제하기
+        chartSectionView.isHidden = true
+        
+        chartTitleLabel.text = "차트"
+        chartTitleLabel.font = .systemFont(ofSize: 17, weight: .bold)
+        
+        configureChartSegmentedControl()
+    }
+    
+    private func configureChartSegmentedControl() {
+        chartSegmentedControl.insertSegment(withTitle: "조회", at: 0, animated: true)
+        chartSegmentedControl.insertSegment(withTitle: "다운로드", at: 1, animated: true)
+        chartSegmentedControl.selectedSegmentIndex = 0
+    }
+}
+
+// MARK: - Logics
+extension PhotoDetailViewController {
+    @objc private func likeButtonTapped() {
+        self.like.toggle()
+        refreshHeartButton()
     }
 }
