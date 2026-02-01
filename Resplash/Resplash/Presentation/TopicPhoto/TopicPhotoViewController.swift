@@ -121,16 +121,30 @@ extension TopicPhotoViewController: UICollectionViewDelegate, UICollectionViewDa
 extension TopicPhotoViewController {
     private func fetchSearchData() {
         self.topicData = Array(repeating: [], count: topics.count)
+        
+        let group = DispatchGroup()
 
         for (index, topic) in topics.enumerated() {
+            group.enter()
+            print("group\(index) enter")
             NetworkManager.shared.request(
                 endpoint: .topic(id: topic)
             ) { data in
-                guard let data = data as? [UnsplashMetaData] else { return }
+                guard let data = data as? [UnsplashMetaData] else {
+                    group.leave()
+                    return
+                }
                 self.topicData?[index] = data
-                self.topicCollectionView.reloadData()
+                group.leave()
+                print("group\(index) leave")
             }
         }
+        
+        group.notify(queue: .main) {
+            print("group end - reloadData")
+            self.topicCollectionView.reloadData()
+        }
+        
     }
 
     
