@@ -217,7 +217,10 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: SearchImageCollectionViewCell.identifier, for: indexPath) as! SearchImageCollectionViewCell
         
         let cellData = imageData?.results[indexPath.item]
-        cell.configureData(with: cellData)
+        let cellImageID = cellData?.id
+        let isLiked = UDManager().isLikedPhoto(cellImageID ?? "")
+        
+        cell.configureData(with: cellData, like: isLiked)
         
         return cell
     }
@@ -241,6 +244,7 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
             return
         }
         let currentUser = currentData.user
+        let isLiked = UDManager().isLikedPhoto(currentData.id)
         
         let vc = PhotoDetailViewController()
         vc.configurePhotoDetailView(.init(
@@ -248,11 +252,16 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
             profileImage: currentData.user.profile_image.medium,
             profileName: currentUser.name,
             createdDate: currentData.created_at,
-            like: false, // TODO: UserDefaults에서 불러오기
+            like: isLiked,
             mainImage: currentData.urls.raw,
             imageWidth: currentData.width,
             imageHeight: currentData.height
         ))
+                
+        vc.changeHeartButtonState = {
+            let cell = collectionView.cellForItem(at: indexPath) as! SearchImageCollectionViewCell
+            cell.refreshLikeButton()
+        }
         navigationController?.pushViewController(vc, animated: true)
     }
     

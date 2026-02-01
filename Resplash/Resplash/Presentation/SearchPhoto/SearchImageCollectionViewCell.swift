@@ -17,8 +17,14 @@ class SearchImageCollectionViewCell: UICollectionViewCell {
     
     lazy var likeTokenView = LikeStarTokenView(likeCount: likeCount)
     
+    let likeButton = UIButton()
+    
     // data
+    var id: String? = nil
     var likeCount: Int = 30000
+    var like: Bool {
+        UDManager().isLikedPhoto(self.id ?? "")
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -37,6 +43,7 @@ extension SearchImageCollectionViewCell {
     func configureHierarchy() {
         contentView.addSubview(imageView)
         contentView.addSubview(likeTokenView)
+        contentView.addSubview(likeButton)
     }
     
     func configureLayout() {
@@ -47,10 +54,16 @@ extension SearchImageCollectionViewCell {
         likeTokenView.snp.makeConstraints { make in
             make.leading.bottom.equalTo(contentView).inset(8)
         }
+        
+        likeButton.snp.makeConstraints { make in
+            make.trailing.bottom.equalTo(contentView).inset(8)
+            make.size.equalTo(30)
+        }
     }
     
     func configureView() {
         configureImageView()
+        configureLikeButton()
         backgroundColor = .systemGray6
     }
     
@@ -59,13 +72,41 @@ extension SearchImageCollectionViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
     }
+    
+    private func configureLikeButton() {
+        likeButton.setTitle(nil, for: .normal)
+        likeButton.backgroundColor = .white.withAlphaComponent(0.3)
+        likeButton.layer.cornerRadius = 15
+        likeButton.clipsToBounds = true
+        likeButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
+        likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
+    }
+    
+    func refreshLikeButton() {
+        likeButton.tintColor = like ? .systemBlue : .white.withAlphaComponent(0.5)
+    }
         
-    func configureData(with data: UnsplashMetaData?) {
+    func configureData(with data: UnsplashMetaData?, like: Bool? = nil) {
         if let data {
+            self.id = data.id
             imageView.kfImage(url: data.urls.small)
             likeTokenView.configureData(count: data.likes)
         }
+        if let like {
+            refreshLikeButton()
+        } else {
+            likeButton.isHidden = true
+        }
     }
     
-    
+    @objc func likeButtonTapped(_ sender: UIButton) {
+        let udManager = UDManager()
+        if like, let id {
+            udManager.cancelLike(id)
+        } else if let id {
+            udManager.addLikedPhoto(id)
+        }
+        
+        refreshLikeButton()
+    }
 }
