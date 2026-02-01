@@ -280,7 +280,8 @@ extension SearchPhotoViewController {
             endpoint: .search(
                 query: query,
                 page: self.page,
-                order: self.orderType
+                order: self.orderType,
+                color: self.selectedColor
             )
         ) { data in
             guard let data = data as? UnsplashMetaDecodable else { return }
@@ -325,9 +326,13 @@ extension SearchPhotoViewController {
             self.selectedColor = color
         }
         
-        refreshColorChipStack()
+        removeResultData()
         
-        // TODO: 정렬 반영 검색
+        if let text = searchBar.text, !text.isEmpty {
+            fetchSearchData(query: text)
+        }
+
+        refreshColorChipStack()
     }
     
     private func removeResultData() {
