@@ -15,6 +15,9 @@ class SearchPhotoViewController: BaseViewController {
     let searchBar = UISearchBar()
 
     let optionSelectView = UIView()
+    let colorChipScrollView = UIScrollView()
+    let colorChipStackView = UIStackView()
+    var colorChips: [ColorChipView] = []
     let orderButton = UIButton()
     
     let resultView = UIView()
@@ -43,6 +46,7 @@ class SearchPhotoViewController: BaseViewController {
     
     // logic / datas
     var imageData: UnsplashMetaDecodable? = nil
+    var selectedColor: UnsplashColor? = nil
     var orderType: UnsplashOrderType = .relevant
     var page = 1
     var latestquery: String? = nil
@@ -58,6 +62,8 @@ class SearchPhotoViewController: BaseViewController {
         view.addSubview(searchBar)
         
         view.addSubview(optionSelectView)
+        optionSelectView.addSubview(colorChipScrollView)
+        colorChipScrollView.addSubview(colorChipStackView)
         optionSelectView.addSubview(orderButton)
         
         view.addSubview(resultView)
@@ -77,6 +83,16 @@ class SearchPhotoViewController: BaseViewController {
             make.top.equalTo(searchBar.snp.bottom)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(50)
+        }
+        
+        colorChipScrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        colorChipStackView.snp.makeConstraints { make in
+            make.height.equalTo(colorChipScrollView.frameLayoutGuide).offset(-16)
+            make.centerY.equalToSuperview()
+            make.horizontalEdges.equalTo(colorChipScrollView.contentLayoutGuide).inset(UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 120))
         }
         
         orderButton.snp.makeConstraints { make in
@@ -121,6 +137,28 @@ extension SearchPhotoViewController {
     
     private func configureOptionSelectView() {
         configureOrderButton()
+        configureColorChipScroll()
+    }
+    
+    private func configureColorChipScroll() {
+        colorChipStackView.spacing = 16
+        
+        for color in UnsplashColor.allCases {
+            let colorChipView = ColorChipView(color: color, isSelected: selectedColor == color)
+            
+            let tapGesture = UITapGestureRecognizer(target: self, action: #selector(colorChipTapped))
+            colorChipView.addGestureRecognizer(tapGesture)
+            colorChipView.isUserInteractionEnabled = true
+            
+            colorChipStackView.addArrangedSubview(colorChipView)
+            colorChips.append(colorChipView)
+        }
+    }
+    
+    private func refreshColorChipStack() {
+        for colorChip in self.colorChips {
+            colorChip.configureData(color: colorChip.color, isSelected: selectedColor == colorChip.color)
+        }
     }
     
     private func configureOrderButton() {
@@ -274,6 +312,22 @@ extension SearchPhotoViewController {
         }
         
         configureOrderButton()
+    }
+    
+    @objc func colorChipTapped(_ gestureRecognizer: UITapGestureRecognizer) {
+        let tappedView = gestureRecognizer.view as! ColorChipView
+        let color = tappedView.color
+        print(#function, color)
+        
+        if selectedColor == color {
+            self.selectedColor = nil
+        } else {
+            self.selectedColor = color
+        }
+        
+        refreshColorChipStack()
+        
+        // TODO: 정렬 반영 검색
     }
     
     private func removeResultData() {
