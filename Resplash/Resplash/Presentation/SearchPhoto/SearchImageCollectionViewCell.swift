@@ -22,7 +22,9 @@ class SearchImageCollectionViewCell: UICollectionViewCell {
     // data
     var id: String? = nil
     var likeCount: Int = 30000
-    var like: Bool = false
+    var like: Bool {
+        UDManager().isLikedPhoto(self.id ?? "")
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -80,7 +82,7 @@ extension SearchImageCollectionViewCell {
         likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
     }
     
-    private func refreshLikeButton() {
+    func refreshLikeButton() {
         likeButton.tintColor = like ? .systemBlue : .white.withAlphaComponent(0.5)
     }
         
@@ -91,7 +93,6 @@ extension SearchImageCollectionViewCell {
             likeTokenView.configureData(count: data.likes)
         }
         if let like {
-            self.like = like
             refreshLikeButton()
         } else {
             likeButton.isHidden = true
@@ -106,7 +107,6 @@ extension SearchImageCollectionViewCell {
             udManager.addLikedPhoto(id)
         }
         
-        like.toggle()
         refreshLikeButton()
     }
 }

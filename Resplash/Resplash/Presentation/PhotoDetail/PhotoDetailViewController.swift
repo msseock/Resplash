@@ -11,6 +11,7 @@ import SnapKit
 
 class PhotoDetailViewController: BaseViewController {
     // MARK: - Properties
+    var changeHeartButtonState: (() -> Void)? = { }
     // MARK: views
     let scrollView = UIScrollView()
     let contentView = UIView()
@@ -409,9 +410,19 @@ extension PhotoDetailViewController {
 // MARK: - Logics
 extension PhotoDetailViewController {
     @objc private func likeButtonTapped() {
-        if data != nil {
+        if let data {
             self.data!.like.toggle()
+            
+            let udManager = UDManager()
+            if data.like {
+                udManager.cancelLike(data.id)
+            } else {
+                udManager.addLikedPhoto(data.id)
+            }
+            
             refreshHeartButton()
+            changeHeartButtonState?()
+            
         } else {
             print(#function)
         }

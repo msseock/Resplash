@@ -257,6 +257,11 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
             imageWidth: currentData.width,
             imageHeight: currentData.height
         ))
+                
+        vc.changeHeartButtonState = {
+            let cell = collectionView.cellForItem(at: indexPath) as! SearchImageCollectionViewCell
+            cell.refreshLikeButton()
+        }
         navigationController?.pushViewController(vc, animated: true)
     }
     
