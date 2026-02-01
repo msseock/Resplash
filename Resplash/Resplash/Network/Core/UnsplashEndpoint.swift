@@ -21,7 +21,7 @@ extension UnsplashEndpoint {
         case .search:
             return "/search/photos"
         case .topic(let id):
-            return "/topics/\(id.rawValue)/photos"
+            return "/topics/\(id.englishName)/photos"
         case .detail(let id):
             return "/photos/\(id)/statistics"
         }
