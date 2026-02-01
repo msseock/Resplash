@@ -207,11 +207,13 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
 // MARK: SearchBar
 extension SearchPhotoViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        print(#function)
         view.endEditing(true)
         if let text = searchBar.text, !text.isEmpty {
-            latestquery = text
-            fetchSearchData(query: text)
+            if text != latestquery {
+                latestquery = text
+                removeResultData()
+                fetchSearchData(query: text)
+            }
         }
     }
 }
@@ -249,13 +251,18 @@ extension SearchPhotoViewController {
         }
         
         // 정렬 방식 바뀔 때는 갱신되도록
-        imageData = nil
-        page = 1
+        removeResultData()
         
         if let text = searchBar.text, !text.isEmpty {
             fetchSearchData(query: text)
         }
         
         configureOrderButton()
+    }
+    
+    private func removeResultData() {
+        imageData = nil
+        page = 1
+
     }
 }
