@@ -286,12 +286,12 @@ extension SearchPhotoViewController: UISearchBarDelegate {
 extension SearchPhotoViewController {
     private func fetchSearchData(query: String) {
         NetworkManager.shared.request(
-            endpoint: .search(
+            endpoint: .search(parameters: .init(
                 query: query,
                 page: self.page,
                 order: self.orderType,
                 color: self.selectedColor
-            )
+            ))
         ) { data in
             guard let data = data as? UnsplashMetaDecodable else { return }
             
