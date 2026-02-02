@@ -16,6 +16,8 @@ struct PhotoDetailData {
     var mainImage: String
     var imageWidth: Int
     var imageHeight: Int
-    var viewCount: Int? = nil
-    var downloadCount: Int? = nil
+    var viewTotalCount: Int? = nil
+    var downloadTotalCount: Int? = nil
+    var viewValues: [Int]? = nil
+    var downloadValues: [Int]? = nil
 }
