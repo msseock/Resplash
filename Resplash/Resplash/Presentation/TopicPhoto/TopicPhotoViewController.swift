@@ -134,6 +134,7 @@ extension TopicPhotoViewController {
         for (index, topic) in topics.enumerated() {
             group.enter()
             print("group\(index) enter")
+            
             NetworkManager.shared.request(
                 endpoint: .topic(id: topic)
             ) { data in
@@ -144,6 +145,10 @@ extension TopicPhotoViewController {
                 self.topicData?[index] = data
                 group.leave()
                 print("group\(index) leave")
+                
+            } errorHandler: { error in
+                group.leave()
+                self.showDefaultAlert(title: error.localizedDescription)
             }
         }
         

@@ -304,7 +304,8 @@ extension PhotoDetailViewController {
         profileImageView.contentMode = .scaleAspectFill
         profileImageView.layer.cornerRadius = 24
         profileImageView.clipsToBounds = true
-        profileImageView.backgroundColor = .lightGray
+        profileImageView.backgroundColor = .systemGray6
+        profileImageView.tintColor = .systemYellow
         
         nameLabel.textAlignment = .left
         nameLabel.numberOfLines = 1
@@ -344,6 +345,8 @@ extension PhotoDetailViewController {
     // main img
     private func configureMainImage() {
         mainImageView.contentMode = .scaleAspectFit
+        mainImageView.backgroundColor = .systemGray6
+        mainImageView.tintColor = .systemYellow
     }
     
     func refreshMainImage() {
@@ -456,6 +459,8 @@ extension PhotoDetailViewController {
             self.data?.downloadCount = data.downloads.total
             
             self.refreshInfoSection()
+        } errorHandler: { error in
+            self.showDefaultAlert(title: error.localizedDescription)
         }
         
     }

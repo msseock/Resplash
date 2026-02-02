@@ -303,6 +303,8 @@ extension SearchPhotoViewController {
             
             self.configureResultView()
             self.SearchImageCollectionView.reloadData()
+        } errorHandler: { error in
+            self.showDefaultAlert(title: error.localizedDescription)
         }
     }
     
