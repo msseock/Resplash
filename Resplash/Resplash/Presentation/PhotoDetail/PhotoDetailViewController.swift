@@ -43,7 +43,7 @@ class PhotoDetailViewController: BaseViewController {
     let chartTitleLabel = UILabel()
     let chartInfoView = UIView()
     let chartSegmentedControl = UISegmentedControl()
-    let chartView = UIView() // TODO: Chart로 바꾸기(지금은 레이아웃만 잡아두고)
+    let chartView = LineChartView()
     
     // MARK: data
     private var data: PhotoDetailData?
@@ -90,7 +90,7 @@ class PhotoDetailViewController: BaseViewController {
     }
     
     private var viewCountText: String {
-        if let viewCount = data?.viewCount {
+        if let viewCount = data?.viewTotalCount {
             NumberFormatManager.shared.getFormattedNumberText(num: viewCount)
         } else {
             "조회 불가"
@@ -98,7 +98,7 @@ class PhotoDetailViewController: BaseViewController {
     }
     
     private var downloadCountText: String {
-        if let downloadCount = data?.downloadCount {
+        if let downloadCount = data?.downloadTotalCount {
             NumberFormatManager.shared.getFormattedNumberText(num: downloadCount)
         } else {
             "조회 불가"
@@ -291,9 +291,9 @@ extension PhotoDetailViewController {
         }
         
         chartView.snp.makeConstraints { make in
-            make.top.equalTo(chartSegmentedControl.snp.bottom)
+            make.top.equalTo(chartSegmentedControl.snp.bottom).offset(16)
             make.horizontalEdges.bottom.equalToSuperview()
-            make.height.equalTo(100)
+            make.height.equalTo(200)
         }
     }
     
@@ -316,20 +316,7 @@ extension PhotoDetailViewController {
         refreshHeartButton()
         heartButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
     }
-    
-//    func configureProfileBarData(
-//        profileImage: String,
-//        profileName: String,
-//        createdDate: String,
-//        like: Bool
-//    ) {
-//        self.data.profileImage = profileImage
-//        self.data.profileName = profileName
-//        self.data.createdDate = profileDate
-//        self.data.like = like
-//        
-//        refreshProfileBar()
-//    }
+
     
     private func refreshProfileBar() {
         profileImageView.kfImage(url: self.data?.profileImage ?? "")
@@ -394,24 +381,40 @@ extension PhotoDetailViewController {
     
     // chart section
     private func configureChartSection() {
-        // TODO: chart 만들고 hidden 해제하기
-        chartSectionView.isHidden = true
-        
         chartTitleLabel.text = "차트"
         chartTitleLabel.font = .systemFont(ofSize: 17, weight: .bold)
         
         configureChartSegmentedControl()
+        configureChart()
     }
     
     private func configureChartSegmentedControl() {
         chartSegmentedControl.insertSegment(withTitle: "조회", at: 0, animated: true)
         chartSegmentedControl.insertSegment(withTitle: "다운로드", at: 1, animated: true)
         chartSegmentedControl.selectedSegmentIndex = 0
+        chartSegmentedControl.addTarget(self, action: #selector(chartSegmentChanged), for: .valueChanged)
+    }
+    
+    private func configureChart() {
+        var data: [Int]
+        switch chartSegmentedControl.selectedSegmentIndex {
+        case 0:
+            data = self.data?.viewValues ?? []
+        case 1:
+            data = self.data?.downloadValues ?? []
+        default:
+            return
+        }
+        self.chartView.dataPoints = data.map { CGFloat($0) }
     }
 }
 
 // MARK: - Logics
 extension PhotoDetailViewController {
+    @objc private func chartSegmentChanged() {
+        configureChart()
+    }
+
     @objc private func likeButtonTapped() {
         if let data {
             self.data!.like.toggle()
@@ -455,10 +458,13 @@ extension PhotoDetailViewController {
                 return
             }
             
-            self.data?.viewCount = data.views.total
-            self.data?.downloadCount = data.downloads.total
+            self.data?.viewTotalCount = data.views.total
+            self.data?.downloadTotalCount = data.downloads.total
+            self.data?.viewValues = data.views.historical.values.map { $0.value }
+            self.data?.downloadValues = data.downloads.historical.values.map { $0.value }
             
             self.refreshInfoSection()
+            self.configureChart()
         } errorHandler: { error in
             self.showDefaultAlert(title: error.localizedDescription)
         }
