@@ -28,5 +28,17 @@ class BaseViewController: UIViewController {
     func configureView() {
         view.backgroundColor = .white
     }
+    
+    func showDefaultAlert(title: String, completionHandler: (() -> Void)? = nil) {
+        let alret = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        
+        let ok = UIAlertAction(title: "확인", style: .default) { _ in
+            completionHandler?()
+        }
+                               
+        alret.addAction(ok)
+        
+        present(alret, animated: true, completion: nil)
+    }
 
 }

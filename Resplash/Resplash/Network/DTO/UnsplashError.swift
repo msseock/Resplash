@@ -7,6 +7,6 @@
 
 import Foundation
 
-struct UnsplashError: Decodable {
+struct UnsplashError: Decodable, Error {
     let errors: [String]
 }

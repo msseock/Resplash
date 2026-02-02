@@ -71,6 +71,7 @@ extension SearchImageCollectionViewCell {
     private func configureImageView() {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
+        imageView.tintColor = .systemYellow
     }
     
     private func configureLikeButton() {

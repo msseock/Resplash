@@ -21,7 +21,11 @@ class NetworkManager {
         ]
     }
     
-    func request(endpoint: UnsplashEndpoint, completionHandler: @escaping (Decodable) -> Void) {
+    func request(
+        endpoint: UnsplashEndpoint,
+        completionHandler: @escaping (Decodable) -> Void,
+        errorHandler: @escaping (any Error) -> Void
+    ) {
         
         let url = APIConstants.baseURL + endpoint.path
         
@@ -35,31 +39,24 @@ class NetworkManager {
         .validate(statusCode: 200..<300)
         .response { response in
             
-            guard let urlResponse = response.response else {
-                print("ERROR: response.response 없음")
-                return
-            }
-            
-            // rate limit 확인
-            print("X-Ratelimit-Remaining: \(urlResponse.value(forHTTPHeaderField: "X-Ratelimit-Remaining") ?? "없음")")
-            
-            if let rateLimitText = urlResponse.value(forHTTPHeaderField: "X-Ratelimit-Remaining"),
-            let rateLimit = Int(rateLimitText),
-            rateLimit == 0 {
-                print("호출횟수 제한으로 다음 호출에는 키 교체 예정")
-                self.changeToNextKey()
-            }
-            
-            // statusCode 확인 & data 검증
-            let statusCode = UnsplashStatusCode(rawValue: urlResponse.statusCode) ?? .undefinedError
-            print("statusCode >>>>", statusCode)
-            
-            guard let data = response.data else {
-                print("ERROR: response.data 없음")
-                return
-            }
-
             do {
+                guard let urlResponse = response.response else {
+                    print("ERROR: response.response 없음")
+                    throw UnsplashError(errors: ["response 없음"])
+                }
+                
+                // rate limit 확인
+                self.checkRateLimit(response: urlResponse)
+                
+                // statusCode 확인 & data 검증
+                let statusCode = UnsplashStatusCode(rawValue: urlResponse.statusCode) ?? .undefinedError
+                print("statusCode >>>>", statusCode)
+                
+                guard let data = response.data else {
+                    print("ERROR: response.data 없음")
+                    throw UnsplashError(errors: ["응답 데이터 없음"])
+                }
+                
                 if statusCode == .ok {
                     let decodedData = try JSONDecoder().decode(endpoint.reponseType.self, from: data)
                     dump(decodedData)
@@ -67,13 +64,29 @@ class NetworkManager {
                     completionHandler(decodedData)
                     
                 } else {
-                    let decodedData = try JSONDecoder().decode(UnsplashError.self, from: data)
-
-                    dump(decodedData)
+                    let decodedError = try JSONDecoder().decode(UnsplashError.self, from: data)
+                    dump(decodedError)
+                    
+                    errorHandler(decodedError)
                 }
             } catch {
-                print("Decoding error: \(error)")
+                print("response error: \(error)")
+                print("error localizedDescription: \(error.localizedDescription)")
+                errorHandler(error)
             }
+        }
+
+    }
+    
+    private func checkRateLimit(response: HTTPURLResponse) {
+        
+        if let rateLimitText = response.value(forHTTPHeaderField: "X-Ratelimit-Remaining"),
+        let rateLimit = Int(rateLimitText),
+        rateLimit == 0 {
+            print("호출횟수 제한으로 다음 호출에는 키 교체 예정")
+            self.changeToNextKey()
+        } else {
+            print("X-Ratelimit-Remaining: 없음")
         }
 
     }
