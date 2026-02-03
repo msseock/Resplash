@@ -322,10 +322,11 @@ extension SearchPhotoViewController {
         // 정렬 방식 바뀔 때는 갱신되도록
         removeResultData()
         
-        if let text = searchBar.text, !text.isEmpty {
-            fetchSearchData(query: text)
+        // 기존 검색어로 바뀐 정렬방식 검색
+        if let latestquery {
+            fetchSearchData(query: latestquery)
         }
-        
+                
         configureOrderButton()
     }
     
