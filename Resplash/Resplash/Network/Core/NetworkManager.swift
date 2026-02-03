@@ -23,8 +23,7 @@ class NetworkManager {
     
     func request(
         endpoint: UnsplashEndpoint,
-        completionHandler: @escaping (Decodable) -> Void,
-        errorHandler: @escaping (any Error) -> Void
+        completionHandler: @escaping (Result<Decodable, Error>) -> Void
     ) {
         
         let url = APIConstants.baseURL + endpoint.path
@@ -57,36 +56,37 @@ class NetworkManager {
                     throw UnsplashError(errors: ["응답 데이터 없음"])
                 }
                 
-                if statusCode == .ok {
+                switch statusCode {
+                case .ok:
                     let decodedData = try JSONDecoder().decode(endpoint.reponseType.self, from: data)
                     dump(decodedData)
+                    completionHandler(.success(decodedData))
                     
-                    completionHandler(decodedData)
-                    
-                } else {
+                default:
                     let decodedError = try JSONDecoder().decode(UnsplashError.self, from: data)
                     dump(decodedError)
                     
-                    errorHandler(decodedError)
+                    completionHandler(.failure(statusCode))
+                    
                 }
             } catch {
-                print("response error: \(error)")
                 print("error localizedDescription: \(error.localizedDescription)")
-                errorHandler(error)
+                completionHandler(.failure(error))
             }
         }
 
     }
     
     private func checkRateLimit(response: HTTPURLResponse) {
+        guard let rateLimitText = response.value(forHTTPHeaderField: "X-Ratelimit-Remaining"), let rateLimit = Int(rateLimitText) else {
+            print("X-Ratelimit-Remaining: 없음")
+            return
+        }
         
-        if let rateLimitText = response.value(forHTTPHeaderField: "X-Ratelimit-Remaining"),
-        let rateLimit = Int(rateLimitText),
-        rateLimit == 0 {
+        print("currentKey: \(currentKey.rawValue)\nX-Ratelimit-Remaining:\(rateLimit)")
+        if rateLimit == 0 {
             print("호출횟수 제한으로 다음 호출에는 키 교체 예정")
             self.changeToNextKey()
-        } else {
-            print("X-Ratelimit-Remaining: 없음")
         }
 
     }

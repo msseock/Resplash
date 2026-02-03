@@ -288,27 +288,44 @@ extension SearchPhotoViewController: UISearchBarDelegate {
 // MARK: - Logic
 extension SearchPhotoViewController {
     private func fetchSearchData(query: String) {
+        
         NetworkManager.shared.request(
-            endpoint: .search(parameters: .init(
-                query: query,
-                page: self.page,
-                order: self.orderType,
-                color: self.selectedColor
-            ))
-        ) { data in
-            guard let data = data as? UnsplashMetaDecodable else { return }
-            
-            if let imgData = self.imageData, !imgData.results.isEmpty {
-                self.imageData?.results.append(contentsOf: data.results)
-            } else {
-                self.imageData = data
+            endpoint: .search(
+                parameters: .init(
+                    query: query,
+                    page: self.page,
+                    order: self.orderType,
+                    color: self.selectedColor
+                )
+            )
+        ) { response in
+            switch response {
+            case .success(let data):
+                do {
+                    try self.handleSussessfulData(data: data)
+                } catch {
+                    self.showDefaultAlert(title: error.localizedDescription)
+                }
+            case .failure(let error):
+                self.showDefaultAlert(title: error.localizedDescription)
             }
-            
-            self.configureResultView()
-            self.SearchImageCollectionView.reloadData()
-        } errorHandler: { error in
-            self.showDefaultAlert(title: error.localizedDescription)
         }
+    }
+    
+    private func handleSussessfulData(data: Decodable) throws(UnsplashError) {
+        guard let data = data as? UnsplashMetaDecodable else {
+            print("UnsplashDetailDecodable casting fail")
+            throw UnsplashError(errors: ["UnsplashDetailDecodable casting fail"])
+        }
+
+        if let imgData = self.imageData, !imgData.results.isEmpty {
+            self.imageData?.results.append(contentsOf: data.results)
+        } else {
+            self.imageData = data
+        }
+
+        self.configureResultView()
+        self.SearchImageCollectionView.reloadData()
     }
     
     @objc func orderButtonTapped() {

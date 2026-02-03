@@ -7,6 +7,10 @@
 
 import Foundation
 
-struct UnsplashError: Decodable, Error {
+struct UnsplashError: Decodable, Error, LocalizedError {
     let errors: [String]
+    
+    var errorDescription: String? {
+        return errors.joined(separator: ", ")
+    }
 }
