@@ -66,6 +66,12 @@ class TopicPhotoViewController: BaseViewController {
         
         navigationItem.largeTitleDisplayMode = .always
         navigationItem.title = "OUR TOPIC"
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "person.crop.circle"),
+            style: .plain,
+            target: self,
+            action: #selector(profileButtonTapped)
+        )
         
         configureCollectionView()
         
@@ -171,5 +177,8 @@ extension TopicPhotoViewController {
     }
 
 
-    
+    @objc private func profileButtonTapped() {
+        let vc = ProfileViewController()
+        present(vc, animated: true)
+    }
 }
