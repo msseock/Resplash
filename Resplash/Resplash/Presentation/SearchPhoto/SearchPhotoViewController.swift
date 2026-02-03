@@ -271,12 +271,15 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
 extension SearchPhotoViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         view.endEditing(true)
-        if let text = searchBar.text, !text.isEmpty {
-            if text != latestquery {
-                latestquery = text
-                removeResultData()
-                fetchSearchData(query: text)
-            }
+        
+        do {
+            let validatedSearchText = try validateSearchText()
+            latestquery = validatedSearchText
+            removeResultData()
+            fetchSearchData(query: validatedSearchText)
+            
+        } catch {
+            showDefaultAlert(title: error.localizedDescription)
         }
     }
 }
@@ -351,4 +354,19 @@ extension SearchPhotoViewController {
         page = 1
 
     }
+    
+    private func validateSearchText() throws(SearchTextError) -> String {
+        guard let text = searchBar.text, !text.replacing(" ", with: "").isEmpty else {
+            print(SearchTextError.isEmpty.localizedDescription)
+            throw SearchTextError.isEmpty
+        }
+        
+        if text == latestquery {
+            print(SearchTextError.notChanged.localizedDescription)
+            throw SearchTextError.notChanged
+        }
+        
+        return text
+    }
 }
+
