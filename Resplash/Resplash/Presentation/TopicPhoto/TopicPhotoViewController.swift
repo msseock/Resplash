@@ -137,18 +137,22 @@ extension TopicPhotoViewController {
             
             NetworkManager.shared.request(
                 endpoint: .topic(id: topic)
-            ) { data in
-                guard let data = data as? [UnsplashMetaData] else {
-                    group.leave()
-                    return
+            ) { response in
+                switch response {
+                case .success(let data):
+                    print("group\(index) success")
+                    do {
+                        try self.handleSussessfulData(data: data, index: index)
+                    } catch {
+                        self.showDefaultAlert(title: error.localizedDescription)
+                    }
+                case .failure(let error):
+                    print("group\(index) fail")
+                    self.showDefaultAlert(title: error.localizedDescription)
                 }
-                self.topicData?[index] = data
-                group.leave()
                 print("group\(index) leave")
-                
-            } errorHandler: { error in
                 group.leave()
-                self.showDefaultAlert(title: error.localizedDescription)
+                
             }
         }
         
@@ -158,6 +162,14 @@ extension TopicPhotoViewController {
         }
         
     }
+    
+    private func handleSussessfulData(data: Decodable, index: Int) throws(UnsplashError) {
+        guard let data = data as? [UnsplashMetaData] else {
+            throw UnsplashError(errors: ["[UnsplashMetaData] casting fail"])
+        }
+        self.topicData?[index] = data
+    }
+
 
     
 }

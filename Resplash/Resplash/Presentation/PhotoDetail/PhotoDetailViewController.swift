@@ -452,22 +452,33 @@ extension PhotoDetailViewController {
         
         NetworkManager.shared.request(
             endpoint: .detail(id: id)
-        ) { data in
-            guard let data = data as? UnsplashDetailDecodable else {
-                print("UnsplashDetailDecodable casting fail")
-                return
+        ) { response in
+            switch response {
+            case .success(let data):
+                do {
+                    try self.handleSussessfulData(data: data as? UnsplashDetailDecodable)
+                } catch {
+                    self.showDefaultAlert(title: error.localizedDescription)
+                }
+            case .failure(let error):
+                self.showDefaultAlert(title: error.localizedDescription)
             }
-            
-            self.data?.viewTotalCount = data.views.total
-            self.data?.downloadTotalCount = data.downloads.total
-            self.data?.viewValues = data.views.historical.values.map { $0.value }
-            self.data?.downloadValues = data.downloads.historical.values.map { $0.value }
-            
-            self.refreshInfoSection()
-            self.configureChart()
-        } errorHandler: { error in
-            self.showDefaultAlert(title: error.localizedDescription)
         }
         
+    }
+    
+    private func handleSussessfulData(data: Decodable) throws(UnsplashError) {
+        guard let data = data as? UnsplashDetailDecodable else {
+            print("UnsplashDetailDecodable casting fail")
+            throw UnsplashError(errors: ["UnsplashDetailDecodable casting fail"])
+        }
+
+        self.data?.viewTotalCount = data.views.total
+        self.data?.downloadTotalCount = data.downloads.total
+        self.data?.viewValues = data.views.historical.values.map { $0.value }
+        self.data?.downloadValues = data.downloads.historical.values.map { $0.value }
+        
+        self.refreshInfoSection()
+        self.configureChart()
     }
 }

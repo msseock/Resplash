@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum UnsplashStatusCode: Int {
+enum UnsplashStatusCode: Int, Error, LocalizedError {
     case ok = 200
     case badRequest = 400
     case unauthorized = 401
@@ -17,7 +17,7 @@ enum UnsplashStatusCode: Int {
     case serviceUnavailable = 503
     case undefinedError
     
-    var description: String {
+    var errorDescription: String? {
         switch self {
         case .ok:
             "good"

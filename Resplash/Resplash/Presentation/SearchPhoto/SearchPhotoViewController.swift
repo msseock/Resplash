@@ -271,12 +271,15 @@ extension SearchPhotoViewController: UICollectionViewDelegate, UICollectionViewD
 extension SearchPhotoViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         view.endEditing(true)
-        if let text = searchBar.text, !text.isEmpty {
-            if text != latestquery {
-                latestquery = text
-                removeResultData()
-                fetchSearchData(query: text)
-            }
+        
+        do {
+            let validatedSearchText = try validateSearchText()
+            latestquery = validatedSearchText
+            removeResultData()
+            fetchSearchData(query: validatedSearchText)
+            
+        } catch {
+            showDefaultAlert(title: error.localizedDescription)
         }
     }
 }
@@ -285,27 +288,44 @@ extension SearchPhotoViewController: UISearchBarDelegate {
 // MARK: - Logic
 extension SearchPhotoViewController {
     private func fetchSearchData(query: String) {
+        
         NetworkManager.shared.request(
-            endpoint: .search(parameters: .init(
-                query: query,
-                page: self.page,
-                order: self.orderType,
-                color: self.selectedColor
-            ))
-        ) { data in
-            guard let data = data as? UnsplashMetaDecodable else { return }
-            
-            if let imgData = self.imageData, !imgData.results.isEmpty {
-                self.imageData?.results.append(contentsOf: data.results)
-            } else {
-                self.imageData = data
+            endpoint: .search(
+                parameters: .init(
+                    query: query,
+                    page: self.page,
+                    order: self.orderType,
+                    color: self.selectedColor
+                )
+            )
+        ) { response in
+            switch response {
+            case .success(let data):
+                do {
+                    try self.handleSussessfulData(data: data)
+                } catch {
+                    self.showDefaultAlert(title: error.localizedDescription)
+                }
+            case .failure(let error):
+                self.showDefaultAlert(title: error.localizedDescription)
             }
-            
-            self.configureResultView()
-            self.SearchImageCollectionView.reloadData()
-        } errorHandler: { error in
-            self.showDefaultAlert(title: error.localizedDescription)
         }
+    }
+    
+    private func handleSussessfulData(data: Decodable) throws(UnsplashError) {
+        guard let data = data as? UnsplashMetaDecodable else {
+            print("UnsplashDetailDecodable casting fail")
+            throw UnsplashError(errors: ["UnsplashDetailDecodable casting fail"])
+        }
+
+        if let imgData = self.imageData, !imgData.results.isEmpty {
+            self.imageData?.results.append(contentsOf: data.results)
+        } else {
+            self.imageData = data
+        }
+
+        self.configureResultView()
+        self.SearchImageCollectionView.reloadData()
     }
     
     @objc func orderButtonTapped() {
@@ -319,10 +339,11 @@ extension SearchPhotoViewController {
         // 정렬 방식 바뀔 때는 갱신되도록
         removeResultData()
         
-        if let text = searchBar.text, !text.isEmpty {
-            fetchSearchData(query: text)
+        // 기존 검색어로 바뀐 정렬방식 검색
+        if let latestquery {
+            fetchSearchData(query: latestquery)
         }
-        
+                
         configureOrderButton()
     }
     
@@ -351,4 +372,19 @@ extension SearchPhotoViewController {
         page = 1
 
     }
+    
+    private func validateSearchText() throws(SearchTextError) -> String {
+        guard let text = searchBar.text, !text.replacing(" ", with: "").isEmpty else {
+            print(SearchTextError.isEmpty.localizedDescription)
+            throw SearchTextError.isEmpty
+        }
+        
+        if text == latestquery {
+            print(SearchTextError.notChanged.localizedDescription)
+            throw SearchTextError.notChanged
+        }
+        
+        return text
+    }
 }
+
