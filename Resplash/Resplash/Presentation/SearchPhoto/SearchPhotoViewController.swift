@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class SearchPhotoViewController: BaseViewController {
+final class SearchPhotoViewController: BaseViewController {
     // MARK: - Properties
     // views
     let searchBar = UISearchBar()

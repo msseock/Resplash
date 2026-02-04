@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class SearchImageCollectionViewCell: UICollectionViewCell {
+final class SearchImageCollectionViewCell: UICollectionViewCell {
     static let identifier = "ShoppingResultCollectionViewCell"
     
     // ui views

@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class ColorChipView: UIView {
+final class ColorChipView: UIView {
     // MARK: - Properties
     // ui
     let stackView: UIStackView = {

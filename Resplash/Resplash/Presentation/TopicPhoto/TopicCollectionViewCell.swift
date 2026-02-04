@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class TopicCollectionViewCell: UICollectionViewCell {
+final class TopicCollectionViewCell: UICollectionViewCell {
     static let identifier = "TopicCollectionViewCell"
     
     // uiviews
