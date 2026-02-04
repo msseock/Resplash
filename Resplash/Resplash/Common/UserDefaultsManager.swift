@@ -7,7 +7,7 @@
 
 import Foundation
 
-class UDManager {
+final class UDManager {
     
     private let likePhotoArrayKey: String = "like"
 

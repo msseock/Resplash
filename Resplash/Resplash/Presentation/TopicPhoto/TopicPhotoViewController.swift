@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class TopicPhotoViewController: BaseViewController {
+final class TopicPhotoViewController: BaseViewController {
     // MARK: - Properties
     // views
     let topicCollectionView: UICollectionView = {

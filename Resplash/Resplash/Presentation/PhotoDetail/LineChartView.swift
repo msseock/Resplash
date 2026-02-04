@@ -7,7 +7,7 @@
 
 import UIKit
 
-class LineChartView: UIView {
+final class LineChartView: UIView {
     var dataPoints: [CGFloat] = [] {
         didSet {
             setNeedsLayout()

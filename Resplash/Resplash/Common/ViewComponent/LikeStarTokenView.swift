@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class LikeStarTokenView: UIView {
+final class LikeStarTokenView: UIView {
     // MARK: - Properties
     // ui
     let stackView: UIStackView = {

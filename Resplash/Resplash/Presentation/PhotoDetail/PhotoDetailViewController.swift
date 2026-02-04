@@ -9,7 +9,7 @@ import UIKit
 
 import SnapKit
 
-class PhotoDetailViewController: BaseViewController {
+final class PhotoDetailViewController: BaseViewController {
     // MARK: - Properties
     var changeHeartButtonState: (() -> Void)? = { }
     // MARK: views
